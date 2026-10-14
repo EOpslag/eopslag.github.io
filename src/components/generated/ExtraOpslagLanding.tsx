@@ -1606,8 +1606,7 @@ const Pricing = ({
       <div className="bg-[#111827] p-10 md:p-14 rounded-3xl shadow-2xl border border-gray-700 relative">
         <div className="text-orange-500 font-bold tracking-widest uppercase mb-4">Aankoopprijs</div>
         <div className="text-6xl font-extrabold text-white mb-2">€34.000,-</div>
-        <div className="text-gray-400 mb-3 font-medium">excl. BTW | + 21% BTW terugvorderbaar voor ondernemers</div>
-        <p className="mb-8 text-sm font-semibold text-orange-300">Betaling in termijnen mogelijk - vraag naar de mogelijkheden</p>
+        <div className="text-gray-400 mb-8 font-medium">excl. BTW | + 21% BTW terugvorderbaar voor ondernemers</div>
         <div className="mb-8 flex flex-col items-center gap-3">
           <div className="flex flex-wrap justify-center gap-2 max-w-[330px]" aria-label={`${soldUnits} verkocht, ${availableUnits} beschikbaar`}>
             {availabilityDots.map(unit => <span key={unit.id} className={`h-3 w-3 rounded-full ${unit.status === 'sold' ? 'bg-red-500' : 'bg-orange-500'}`}></span>)}
