@@ -38,9 +38,10 @@ CSP aanwezig, canonical/`lang="nl"`, robots/sitemap/404.
 
 ## Beveiliging — wat er is ingebouwd
 
-- **Content-Security-Policy** (meta-tag, alleen in productiebuild): scripts alleen van eigen origin (geen inline/eval),
-  verbindingen alleen naar `api.emailjs.com`, afbeeldingen alleen eigen + OpenStreetMap-tegels, geen frames/objecten.
-- **Geen externe CDN's of lettertypen**: Leaflet, lettertypen (Inter/Roboto) en alle afbeeldingen worden zelf gehost;
+- **Content-Security-Policy** (meta-tag, alleen in productiebuild): scripts alleen van eigen origin plus het Umami-statistiekscript
+  (geen inline/eval), verbindingen alleen naar `api.emailjs.com` en `gateway.umami.is`, afbeeldingen alleen eigen +
+  OpenStreetMap-tegels, geen frames/objecten.
+- **Geen externe CDN's of lettertypen** (enige uitzondering: het Umami Cloud-statistiekscript, zie onder): Leaflet, lettertypen (Inter/Roboto) en alle afbeeldingen worden zelf gehost;
   de kaart laadt pas vlak voordat u erheen scrolt (dan pas gaat het bezoekers-IP naar OpenStreetMap).
 - **Formulieren**: strengere validatie (e-mail/telefoon), lengtebeperkingen, besturingstekens gestript, honeypot,
   throttling (1 aanvraag per 20 s, max. 5 per sessie), geen `console.log` van persoonsgegevens, geen `accessToken`,
@@ -67,6 +68,14 @@ Iedereen die de site bekijkt kan ze zien, dus de bescherming zit in uw dashboard
 - [ ] 2FA aan voor alle beheerders; branch protection op `main` (PR + groene checks verplicht).
 - [ ] Secret scanning + push protection en Dependabot alerts aanzetten (Settings → Code security).
 - [ ] Domein verifiëren voor Pages (zie hierboven) en HTTPS afdwingen.
+
+### Statistieken (Umami Cloud)
+
+`index.html` bevat een marker `<!--ANALYTICS-->`; `vite.config.ts` vervangt die **alleen in productiebuilds** door het Umami-script
+(`cloud.umami.is/script.js`, cookieloos). Lokaal (`yarn dev`) wordt dus niets verstuurd. De launch-gate eist dat het script
+aanwezig is en staat geen andere externe scripts toe. Let op: een extern script kan alles op de pagina lezen (ook formuliervelden);
+vertrouw alleen aanbieders waarvan u de voorwaarden kent. Tips: met `data-domains="extraopslag.nl"` op de scripttag telt Umami geen
+testverkeer van localhost of de github.io-URL mee; `data-do-not-track="true"` respecteert de Do-Not-Track-instelling van bezoekers.
 
 ### Bekende beperkingen (GitHub Pages)
 

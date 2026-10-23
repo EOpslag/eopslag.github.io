@@ -9,18 +9,18 @@ const SITE_URL = (process.env.SITE_URL || 'https://extraopslag.nl').replace(/\/+
 
 // GitHub Pages cannot send HTTP headers, so the Content-Security-Policy is delivered via <meta> in
 // production builds only (the dev server needs inline scripts for hot reload).
-// - scripts: same-origin only (no inline, no eval, no third-party CDN)
+// - scripts: same-origin plus the Umami Cloud analytics script (no inline, no eval, no other third party)
 // - styles: 'unsafe-inline' is required by Leaflet marker HTML and React inline style attributes
 // - img: OpenStreetMap tiles for the location map
-// - connect: EmailJS REST endpoint used by the lead forms
+// - connect: EmailJS REST endpoint used by the lead forms, Umami's collection endpoint (gateway.umami.is)
 // `frame-ancestors` is intentionally absent: it is ignored in <meta> CSP (needs a real header).
 const CSP = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' https://cloud.umami.is",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.tile.openstreetmap.org",
   "font-src 'self'",
-  "connect-src 'self' https://api.emailjs.com",
+  "connect-src 'self' https://api.emailjs.com https://gateway.umami.is",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
   "frame-src 'none'",
@@ -29,6 +29,10 @@ const CSP = [
   "form-action 'self'",
   'upgrade-insecure-requests',
 ].join('; ');
+
+// Umami Cloud analytics (cookieless). Injected into production builds only, so local dev never sends hits.
+const ANALYTICS_TAG =
+  '<script defer src="https://cloud.umami.is/script.js" data-website-id="30d72673-731c-49b6-8432-51520d3cc1fb"></script>';
 
 const PAGES = ['/', '/privacybeleid.html', '/algemene-voorwaarden.html'];
 
@@ -39,7 +43,11 @@ function siteMeta(): Plugin {
       order: 'pre',
       handler(html, ctx) {
         const csp = ctx.server ? '' : `<meta http-equiv="Content-Security-Policy" content="${CSP}" />`;
-        return html.replaceAll('%SITE_URL%', SITE_URL).replace('<!--CSP-->', csp);
+        const analytics = ctx.server ? '' : ANALYTICS_TAG;
+        return html
+          .replaceAll('%SITE_URL%', SITE_URL)
+          .replace('<!--CSP-->', csp)
+          .replace('<!--ANALYTICS-->', analytics);
       },
     },
     generateBundle() {

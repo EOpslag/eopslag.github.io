@@ -69,7 +69,11 @@ try {
 }
 if (indexHtml) {
   if (!/http-equiv="Content-Security-Policy"/.test(indexHtml)) errors.push('index.html: Content-Security-Policy meta tag missing');
-  if (/<script[^>]*src="https?:\/\//.test(indexHtml)) errors.push('index.html: external <script src> found');
+  const ALLOWED_SCRIPT_ORIGINS = ['https://cloud.umami.is/'];
+  for (const [, src] of indexHtml.matchAll(/<script[^>]*\ssrc="(https?:\/\/[^"]+)"/g)) {
+    if (!ALLOWED_SCRIPT_ORIGINS.some(origin => src.startsWith(origin))) errors.push(`index.html: unexpected external <script src="${src}">`);
+  }
+  if (!/<script defer src="https:\/\/cloud\.umami\.is\/script\.js" data-website-id="[0-9a-f-]{36}"><\/script>/.test(indexHtml)) errors.push('index.html: Umami analytics script missing');
   if (!/<link rel="canonical" href="https:\/\/[^"]+\/"/.test(indexHtml)) errors.push('index.html: canonical URL missing or not https');
   if (!/<html lang="nl"/.test(indexHtml)) errors.push('index.html: lang="nl" missing');
 }
