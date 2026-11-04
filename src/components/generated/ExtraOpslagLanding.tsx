@@ -443,7 +443,8 @@ const FAQ_ITEMS = [{
 type BuyerType = 'particulier' | 'ondernemer' | 'belegger';
 type PurchaseTimeline = 'Zo snel mogelijk' | 'Binnen 1 maand' | 'Binnen 3 maanden' | 'Orientatiefase';
 type UnitInterest = '1 unit' | '2-3 units' | '4 plus units';
-type LocationPreference = 'begane-grond' | 'hoekunit' | 'nabij-hoofdingang' | 'geen-voorkeur';
+type FloorPreference = 'begane-grond' | '1e-verdieping';
+type LocationPreference = 'hoekunit' | 'nabij-hoofdingang' | 'geen-voorkeur';
 interface PurchaseFormData {
   firstName: string;
   lastName: string;
@@ -455,8 +456,8 @@ interface PurchaseFormData {
   source: string;
   kvkNumber: string;
   unitInterest: UnitInterest;
+  floorPreference: FloorPreference;
   locationPreference: LocationPreference;
-  financingInterest: boolean;
   confirmed: boolean;
 }
 interface PurchaseModalProps {
@@ -478,6 +479,12 @@ interface StepOneErrors {
 }
 interface LocationOption {
   id: LocationPreference;
+  icon: typeof Zap;
+  title: string;
+  description: string;
+}
+interface FloorOption {
+  id: FloorPreference;
   icon: typeof Zap;
   title: string;
   description: string;
@@ -512,8 +519,8 @@ const initialPurchaseForm: PurchaseFormData = {
   source: 'Google',
   kvkNumber: '',
   unitInterest: '1 unit',
+  floorPreference: 'begane-grond',
   locationPreference: 'geen-voorkeur',
-  financingInterest: false,
   confirmed: false
 };
 const STEP_LABELS = [{
@@ -559,11 +566,6 @@ const UNIT_OPTIONS: {
   label: '4 plus units'
 }];
 const LOCATION_OPTIONS: LocationOption[] = [{
-  id: 'begane-grond',
-  icon: Layers,
-  title: 'Begane grond',
-  description: 'Makkelijkst bereikbaar, ideaal voor auto or aanhanger'
-}, {
   id: 'hoekunit',
   icon: Building2,
   title: 'Hoekunit',
@@ -578,6 +580,17 @@ const LOCATION_OPTIONS: LocationOption[] = [{
   icon: Shield,
   title: 'Geen voorkeur',
   description: 'Wijs mij de best beschikbare unit toe'
+}];
+const FLOOR_OPTIONS: FloorOption[] = [{
+  id: 'begane-grond',
+  icon: Layers,
+  title: 'Begane grond',
+  description: 'Makkelijkst bereikbaar, ideaal voor auto of aanhanger'
+}, {
+  id: '1e-verdieping',
+  icon: ArrowUp,
+  title: '1e verdieping',
+  description: 'Hoger gelegen in het opslagpark'
 }];
 interface FacilityUseCase {
   id: string;
@@ -741,6 +754,7 @@ const PurchaseModal = ({
   }
   const progressWidth = `${Math.max(step - 1, 0) / 3 * 100}%`;
   const selectedLocationOption = LOCATION_OPTIONS.find(option => option.id === formData.locationPreference);
+  const selectedFloorOption = FLOOR_OPTIONS.find(option => option.id === formData.floorPreference);
   const buyerLabel = formData.buyerType === 'ondernemer' ? 'Ondernemer / ZZP' : formData.buyerType === 'belegger' ? 'Belegger' : 'Particulier';
   return <div className="fixed inset-0 z-[100] bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={closeModal} role="dialog" aria-modal="true" aria-labelledby="purchase-modal-title">
       <div className="purchase-funnel-modal max-w-[580px] w-full sm:mx-4 bg-[#111827] rounded-t-3xl sm:rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[100svh] sm:max-h-[92vh] h-[100svh] sm:h-auto flex flex-col" onClick={event => event.stopPropagation()}>
@@ -810,7 +824,7 @@ const PurchaseModal = ({
                 <div className="grid gap-3">
                   <button type="button" onClick={() => updateField('buyerType', 'particulier')} className={`border-2 rounded-2xl p-5 cursor-pointer text-left transition-all flex items-center gap-4 ${formData.buyerType === 'particulier' ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_24px_rgba(249,115,22,0.16)]' : 'border-white/10 bg-[#0F1117] hover:border-white/25'}`}><Home className="w-7 h-7 text-orange-500" /><span><strong className="block text-white">Particulier</strong><span className="text-sm text-gray-400">Voor persoonlijke opslag</span></span></button>
                   <button type="button" onClick={() => updateField('buyerType', 'ondernemer')} className={`border-2 rounded-2xl p-5 cursor-pointer text-left transition-all flex items-center gap-4 ${formData.buyerType === 'ondernemer' ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_24px_rgba(249,115,22,0.16)]' : 'border-white/10 bg-[#0F1117] hover:border-white/25'}`}><Briefcase className="w-7 h-7 text-orange-500" /><span><strong className="block text-white">Ondernemer ZZP</strong><span className="text-sm text-gray-400">BTW volledig terugvorderbaar</span></span></button>
-                  <button type="button" onClick={() => updateField('buyerType', 'belegger')} className={`border-2 rounded-2xl p-5 cursor-pointer text-left transition-all flex items-center gap-4 ${formData.buyerType === 'belegger' ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_24px_rgba(249,115,22,0.16)]' : 'border-white/10 bg-[#0F1117] hover:border-white/25'}`}><TrendingUp className="w-7 h-7 text-orange-500" /><span><strong className="block text-white">Belegger</strong><span className="text-sm text-gray-400">6-8% jaarlijks rendement</span></span></button>
+                  <button type="button" onClick={() => updateField('buyerType', 'belegger')} className={`border-2 rounded-2xl p-5 cursor-pointer text-left transition-all flex items-center gap-4 ${formData.buyerType === 'belegger' ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_24px_rgba(249,115,22,0.16)]' : 'border-white/10 bg-[#0F1117] hover:border-white/25'}`}><TrendingUp className="w-7 h-7 text-orange-500" /><span><strong className="block text-white">Belegger</strong><span className="text-sm text-gray-400">~10% jaarlijks rendement</span></span></button>
                 </div>
               </fieldset>
               <AnimatePresence>
@@ -823,14 +837,14 @@ const PurchaseModal = ({
             }} exit={{
               opacity: 0,
               y: -6
-            }} className="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-semibold text-orange-100">Bij verhuur rond 170-227 euro per maand is 6-8% jaarlijks bruto rendement indicatief haalbaar.</motion.div>}
+            }} className="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4 text-sm font-semibold text-orange-100">Bij verhuur rond €290 per maand is circa 10% jaarlijks bruto rendement indicatief haalbaar.</motion.div>}
               </AnimatePresence>
               <fieldset className="space-y-3"><legend className="text-sm font-semibold text-gray-300">Wanneer wilt u kopen</legend>
                 <div className="flex flex-wrap gap-2">
                   {TIMELINE_OPTIONS.map(option => <button key={option.id} type="button" onClick={() => updateField('purchaseTiming', option.id)} className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${formData.purchaseTiming === option.id ? 'border-orange-500 bg-orange-500 text-white' : 'border-white/10 bg-[#0F1117] text-gray-300 hover:border-white/25'}`}>{option.label}</button>)}
                 </div>
               </fieldset>
-              <label className="space-y-2 text-sm font-semibold text-gray-300 block"><span>Hoe heeft u ons gevonden?</span><select value={formData.source} onChange={event => updateField('source', event.target.value)} className={inputClass}><option>Google</option><option>Social media</option><option>Via via</option><option>Andere website</option><option>Anders</option></select></label>
+              <label className="space-y-2 text-sm font-semibold text-gray-300 block"><span>Hoe heeft u ons gevonden?</span><select value={formData.source} onChange={event => updateField('source', event.target.value)} className={inputClass}><option>Google</option><option>Funda</option><option>Makelaar</option><option>Social media</option><option>Via via</option><option>Andere website</option><option>Anders</option></select></label>
               {formData.buyerType === 'belegger' && <fieldset className="space-y-3"><legend className="text-sm font-semibold text-gray-300">Hoeveel units</legend><div className="flex flex-wrap gap-2">{UNIT_OPTIONS.map(option => <button key={option.id} type="button" onClick={() => updateField('unitInterest', option.id)} className={`rounded-full border px-4 py-2 text-sm font-bold transition-colors ${formData.unitInterest === option.id ? 'border-orange-500 bg-orange-500 text-white' : 'border-white/10 bg-[#0F1117] text-gray-300 hover:border-white/25'}`}>{option.label}</button>)}</div></fieldset>}
               {formData.buyerType === 'ondernemer' && <label className="space-y-2 text-sm font-semibold text-gray-300 block"><span>KvK nummer (optioneel)</span><input maxLength={FIELD_LIMITS.kvk} inputMode="numeric" value={formData.kvkNumber} onChange={event => updateField('kvkNumber', event.target.value)} className={inputClass} placeholder="12345678" /></label>}
               <div className="flex flex-col sm:flex-row gap-3"><button type="button" onClick={() => setStep(1)} className="sm:w-1/3 border border-white/10 text-gray-300 hover:text-white hover:border-white/25 px-5 py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><ArrowLeft className="w-5 h-5" /><span>Terug</span></button><button type="button" onClick={() => setStep(3)} className="sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><span>Volgende: Uw box</span><ArrowRight className="w-5 h-5" /></button></div>
@@ -847,8 +861,24 @@ const PurchaseModal = ({
                 </div>
                 <div className="mt-5 grid grid-cols-3 gap-2 text-center text-sm font-bold text-gray-200"><span className="rounded-xl bg-white/5 px-2 py-3">4m breed</span><span className="rounded-xl bg-white/5 px-2 py-3">3.5m diep</span><span className="rounded-xl bg-white/5 px-2 py-3">3.4m hoog</span></div>
               </div>
+              <section className="space-y-3" aria-labelledby="floor-title">
+                <h3 id="floor-title" className="text-xs font-black uppercase tracking-widest text-gray-400">Verdieping</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {FLOOR_OPTIONS.map(option => {
+                const Icon = option.icon;
+                const selected = formData.floorPreference === option.id;
+                return <button key={option.id} type="button" onClick={() => updateField('floorPreference', option.id)} className={`border-2 rounded-2xl p-5 cursor-pointer text-left transition-all flex items-start gap-4 ${selected ? 'border-orange-500 bg-orange-500/10' : 'border-white/10 bg-[#0F1117] hover:border-white/25'}`}>
+                        <Icon className="w-7 h-7 text-orange-500 shrink-0" />
+                        <span>
+                          <strong className="block text-white">{option.title}</strong>
+                          <span className="mt-1 block text-sm text-gray-400">{option.description}</span>
+                        </span>
+                      </button>;
+              })}
+                </div>
+              </section>
               <section className="space-y-3" aria-labelledby="location-title">
-                <h3 id="location-title" className="text-xs font-black uppercase tracking-widest text-gray-400">Voorkeur locatie binnen het park</h3>
+                <h3 id="location-title" className="text-xs font-black uppercase tracking-widest text-gray-400">Positie binnen het park</h3>
                 <div className="grid sm:grid-cols-2 gap-3">
                   {LOCATION_OPTIONS.map(option => {
                 const Icon = option.icon;
@@ -863,13 +893,6 @@ const PurchaseModal = ({
               })}
                 </div>
               </section>
-              <div className="rounded-2xl border border-white/10 bg-[#0F1117] p-4">
-                <button type="button" onClick={() => updateField('financingInterest', !formData.financingInterest)} className="w-full flex items-center justify-between gap-4 text-left">
-                  <span className="font-bold text-white">Ik ben geinteresseerd in financieringsmogelijkheden</span>
-                  <span className={`h-7 w-12 rounded-full p-1 transition-colors ${formData.financingInterest ? 'bg-orange-500' : 'bg-gray-700'}`}><span className={`block h-5 w-5 rounded-full bg-white transition-transform ${formData.financingInterest ? 'translate-x-5' : 'translate-x-0'}`}></span></span>
-                </button>
-                {formData.financingInterest && <div className="mt-4 rounded-xl bg-orange-500/10 border border-orange-500/20 p-4 text-sm text-orange-100">Wij bespreken passende financieringsopties en termijnbetalingen tijdens het terugbelgesprek.</div>}
-              </div>
               <div className="flex flex-col sm:flex-row gap-3"><button type="button" onClick={() => setStep(2)} className="sm:w-1/3 border border-white/10 text-gray-300 hover:text-white hover:border-white/25 px-5 py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><ArrowLeft className="w-5 h-5" /><span>Terug</span></button><button type="button" onClick={() => setStep(4)} className="sm:flex-1 bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"><span>Volgende: Bevestiging</span><ArrowRight className="w-5 h-5" /></button></div>
               <button type="button" onClick={closeModal} className="w-full text-center text-sm font-bold text-gray-400 hover:text-white transition-colors">Annuleren</button>
             </div>}
@@ -885,11 +908,11 @@ const PurchaseModal = ({
                 <div className="flex justify-between gap-4 border-b border-white/10 pb-3"><span className="text-gray-400">Telefoon</span><strong className="text-white text-right">{formData.phone}</strong></div>
                 <div className="flex justify-between gap-4 border-b border-white/10 pb-3"><span className="text-gray-400">Type koper</span><strong className="text-white text-right">{buyerLabel}</strong></div>
                 <div className="flex justify-between gap-4 border-b border-white/10 pb-3"><span className="text-gray-400">Gewenste aankoop</span><strong className="text-white text-right">{formData.purchaseTiming}</strong></div>
-                <div className="flex justify-between gap-4 border-b border-white/10 pb-3"><span className="text-gray-400">Locatievoorkeur</span><strong className="text-white text-right">{selectedLocationOption?.title ?? 'Geen voorkeur'}</strong></div>
-                {formData.financingInterest && <div className="flex justify-between gap-4"><span className="text-gray-400">Financiering</span><strong className="text-white text-right">Graag bespreken</strong></div>}
+                <div className="flex justify-between gap-4 border-b border-white/10 pb-3"><span className="text-gray-400">Verdieping</span><strong className="text-white text-right">{selectedFloorOption?.title ?? 'Begane grond'}</strong></div>
+                <div className="flex justify-between gap-4"><span className="text-gray-400">Positie</span><strong className="text-white text-right">{selectedLocationOption?.title ?? 'Geen voorkeur'}</strong></div>
               </div>
               <div className="bg-orange-500/10 border-l-4 border-orange-500 rounded-r-xl p-4 text-orange-100 leading-relaxed">Na ontvangst belt ons team binnen 1 werkdag. Optie 4 werkdagen geldig.</div>
-              {formData.buyerType === 'belegger' && <div className="rounded-2xl border border-orange-500/30 bg-[#0F1117] p-5"><p className="text-sm font-bold uppercase tracking-widest text-orange-400">ROI teaser</p><p className="mt-2 text-white font-bold">Bij 227 per maand huur: Rendement 8.0 percent per jaar, Terugverdientijd 7.5 jaar.</p></div>}
+              {formData.buyerType === 'belegger' && <div className="rounded-2xl border border-orange-500/30 bg-[#0F1117] p-5"><p className="text-sm font-bold uppercase tracking-widest text-orange-400">ROI teaser</p><p className="mt-2 text-white font-bold">Bij €290 per maand huur: Rendement circa 10 procent per jaar, Terugverdientijd circa 10 jaar.</p></div>}
               <label className="flex items-start gap-3 text-sm text-gray-300"><input type="checkbox" checked={formData.confirmed} onChange={event => updateField('confirmed', event.target.checked)} className="mt-1 accent-orange-500" /><span>Ik bevestig dat bovenstaande gegevens correct zijn</span></label>
               {confirmError && <p className="text-xs text-red-400">{confirmError}</p>}
               <button type="button" disabled={isSubmitting} onClick={async () => {
@@ -901,14 +924,15 @@ const PurchaseModal = ({
             setIsSubmitting(true);
             try {
               const selectedLocation = LOCATION_OPTIONS?.find?.((o: any) => o.id === formData.locationPreference)?.title || formData.locationPreference || 'Geen voorkeur';
+              const selectedFloor = FLOOR_OPTIONS.find(o => o.id === formData.floorPreference)?.title || 'Begane grond';
               const emailData: Record<string, string> = {
                 'Naam': `${formData.firstName} ${formData.lastName}`.trim(),
                 'E-mail': formData.email || '',
                 'Telefoon': formData.phone || '',
                 'Type koper': formData.buyerType || '',
                 'Gewenste aankoop': formData.purchaseTiming || '',
-                'Locatievoorkeur': selectedLocation,
-                'Financiering': formData.financingInterest ? 'Ja' : 'Nee',
+                'Verdieping': selectedFloor,
+                'Positievoorkeur': selectedLocation,
                 'Unit': '14m² ExtraOpslag Box',
                 'Prijs': 'Vanaf €34.000,- excl. BTW',
                 'Oplevering': 'December 2026',
@@ -945,7 +969,7 @@ const PurchaseModal = ({
               <ol className="space-y-3 text-left max-w-sm mx-auto">
                 <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">1</span><span>Wij bellen u terug op {formData.phone}</span></li>
                 <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">2</span><span>Wij mailen u indien nodig op {formData.email}</span></li>
-                <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">3</span><span>Locatievoorkeur: {selectedLocationOption?.title ?? 'Geen voorkeur'}</span></li>
+                <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">3</span><span>Verdieping: {selectedFloorOption?.title ?? 'Begane grond'} · Positie: {selectedLocationOption?.title ?? 'Geen voorkeur'}</span></li>
                 <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">4</span><span>Optie 4 werkdagen</span></li>
                 {formData.buyerType === 'belegger' && <li className="flex items-center gap-3 text-gray-200"><span className="w-7 h-7 rounded-full bg-orange-500 text-white flex items-center justify-center text-sm font-bold">5</span><span>Onze beleggersbrochure bespreken wij tijdens het gesprek</span></li>}
               </ol>
@@ -1539,7 +1563,7 @@ const CounterBar = () => {
           <p className="mt-2 text-gray-500 font-medium">eigenaren</p>
         </div>
         <div>
-          <div className="text-4xl md:text-5xl font-extrabold text-gray-900">6-8%</div>
+          <div className="text-4xl md:text-5xl font-extrabold text-gray-900">~10%</div>
           <p className="mt-2 text-gray-500 font-medium">rendement per jaar</p>
         </div>
         <div>
@@ -1639,9 +1663,10 @@ const YieldCalculator = ({
 }: {
   onDownloadBrochure: () => void;
 }) => {
-  const [rent, setRent] = useState(350);
+  const [rent, setRent] = useState(290);
   const annualIncome = rent * 12;
-  const grossYield = Math.min(Math.max(annualIncome / PURCHASE_PRICE * 100, 6), 8);
+  const grossYield = annualIncome / PURCHASE_PRICE * 100;
+  const paybackYears = PURCHASE_PRICE / annualIncome;
   return <section className="bg-[#F8FAFC] py-24 px-6 border-b border-gray-200">
       <div className="max-w-5xl mx-auto grid lg:grid-cols-[0.9fr_1.1fr] gap-10 items-center">
         <div>
@@ -1649,7 +1674,7 @@ const YieldCalculator = ({
             <Calculator className="w-4 h-4" /><span>Rental Yield Calculator</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-5">Reken uw potentiële verhuurrendement.</h2>
-          <p className="text-lg text-gray-600 leading-relaxed">Stel de maandhuur in en zie direct de jaarlijkse inkomsten, het bruto rendement binnen de 6-8% bandbreedte en de indicatieve terugverdientijd van 5-10 jaar op basis van €34.000 aankoopprijs.</p>
+          <p className="text-lg text-gray-600 leading-relaxed">Stel de maandhuur in en zie direct de jaarlijkse inkomsten, het bruto rendement en de indicatieve terugverdientijd op basis van €34.000 aankoopprijs.</p>
         </div>
         <div className="bg-white rounded-3xl border border-gray-200 p-8 shadow-sm">
           <label htmlFor="rent-range" className="flex justify-between gap-4 text-gray-900 font-bold mb-4">
@@ -1669,7 +1694,7 @@ const YieldCalculator = ({
             </div>
             <div className="rounded-2xl bg-gray-50 p-5 border border-gray-100">
               <p className="text-sm text-gray-500 font-medium">Terugverdientijd</p>
-              <div className="text-2xl font-extrabold text-gray-900 mt-2">5-10 jaar</div>
+              <div className="text-2xl font-extrabold text-gray-900 mt-2">{paybackYears.toFixed(1)} jaar</div>
             </div>
           </div>
           <button type="button" onClick={onDownloadBrochure} className="mt-8 w-full bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-xl font-bold text-lg uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
@@ -2262,15 +2287,15 @@ const INLINE_ROI_ROWS = [{
 }, {
   id: 'huurinkomsten',
   label: 'Huurinkomsten',
-  value: '€350–€450/mnd'
+  value: '€290/mnd'
 }, {
   id: 'rendement',
   label: 'Bruto rendement',
-  value: '6–8%'
+  value: '~10%'
 }, {
   id: 'terugverdientijd',
   label: 'Terugverdientijd',
-  value: '5–10 jaar'
+  value: '~10 jaar'
 }, {
   id: 'doorverkoopwaarde',
   label: 'Doorverkoopwaarde',
@@ -2279,8 +2304,8 @@ const INLINE_ROI_ROWS = [{
 const INLINE_COMPARISON_BARS = [{
   id: 'extraopslag',
   label: 'ExtraOpslag',
-  value: '6-8%',
-  width: '42%',
+  value: '~10%',
+  width: '53%',
   featured: true
 }, {
   id: 'spaarrekening',
@@ -2541,7 +2566,7 @@ const InlineBrochureViewer = ({
               </div>)}
           </div>
           <div className="mt-8 rounded-2xl bg-orange-500 p-5 text-center text-lg font-black text-white">
-            <span>Ideaal als investering — terugverdientijd slechts 5-10 jaar</span>
+            <span>Ideaal als investering — terugverdientijd circa 10 jaar</span>
           </div>
           <p className="mt-5 text-xs italic text-gray-400"><span>{INLINE_SHORT_DISCLAIMER}</span></p>
           <span className="absolute bottom-5 right-8 text-xs font-semibold text-gray-400">Pagina 2 van 5</span>
